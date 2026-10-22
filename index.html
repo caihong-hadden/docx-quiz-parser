@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026年毛概刷题与背诵系统</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal-overlay">
+        <div class="login-modal-content glass">
+            <h2><i data-lucide="user"></i> 请输入您的昵称</h2>
+            <p>输入昵称即可开启刷题打榜之旅，您的进度将同步至实时风云榜。</p>
+            <input type="text" id="login-username" placeholder="例如：毛概战神" maxlength="15" autocomplete="off"/>
+            <button class="btn btn-primary btn-large" id="btn-login" style="width: 100%; margin-top: 1rem;">进入系统</button>
+        </div>
+    </div>
+
+    <!-- Background Gradients -->
+    <div class="bg-gradient-1"></div>
+    <div class="bg-gradient-2"></div>
+    
+    <div class="app-container">
+        <!-- Navigation Bar -->
+        <header class="app-header glass">
+            <div class="logo">
+                <i data-lucide="book-open" class="logo-icon"></i>
+                <span class="logo-text">毛概刷题与背诵系统</span>
+                <span class="logo-badge">2026 版</span>
+            </div>
+            <nav class="nav-links">
+                <button class="nav-btn active" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard"></i> <span>学习看板</span>
+                </button>
+                <button class="nav-btn" data-tab="practice">
+                    <i data-lucide="edit-3"></i> <span>章节练习</span>
+                </button>
+                <button class="nav-btn" data-tab="exam">
+                    <i data-lucide="award"></i> <span>模拟考试</span>
+                </button>
+                <button class="nav-btn" data-tab="wrong-collection">
+                    <i data-lucide="help-circle"></i> <span>错题本</span>
+                    <span class="badge" id="wrong-count-badge">0</span>
+                </button>
+                <button class="nav-btn" data-tab="flashcard">
+                    <i data-lucide="layers"></i> <span>主观题背诵</span>
+                </button>
+            </nav>
+            <div class="header-actions">
+                <button class="theme-toggle-btn" id="theme-toggle" title="切换主题">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace and Sidebar Wrapper -->
+        <div class="content-wrapper">
+            <main class="app-main">
+                <!-- Dashboard View -->
+            <section id="tab-dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <!-- Progress Card -->
+                    <div class="dashboard-card glass large-card progress-summary">
+                        <h3><i data-lucide="trending-up"></i> 学习进度概览</h3>
+                        <div class="stats-container">
+                            <div class="stat-box">
+                                <span class="stat-val" id="total-answered">0</span>
+                                <span class="stat-label">已答题目</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-val" id="total-accuracy">0%</span>
+                                <span class="stat-label">平均正确率</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-val" id="wrong-total">0</span>
+                                <span class="stat-label">错题总量</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-val" id="flashcard-mastered">0</span>
+                                <span class="stat-label">已背诵主观题</span>
+                            </div>
+                        </div>
+                        <div class="overall-progress-bar-container">
+                            <div class="progress-info">
+                                <span>整体通关进度</span>
+                                <span id="overall-progress-text">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="overall-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Info Panel -->
+                    <div class="dashboard-card glass info-card">
+                        <h3><i data-lucide="sparkles"></i> 智能复习推荐</h3>
+                        <div class="recommend-box">
+                            <p id="recommendation-text">加载中...</p>
+                            <button class="btn btn-primary" id="btn-quick-start">
+                                <i data-lucide="play"></i> 快速开始
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chapters Section -->
+                <div class="section-header">
+                    <h2><i data-lucide="folder"></i> 题库章节</h2>
+                </div>
+                <div class="chapters-grid" id="chapters-list">
+                    <!-- Rendered by JS -->
+                </div>
+            </section>
+
+            <!-- Practice / Quiz View -->
+            <section id="tab-practice" class="tab-content">
+                <div class="split-view">
+                    <!-- Sidebar for Question Navigator -->
+                    <aside class="side-panel glass">
+                        <div class="side-header">
+                            <h3 id="practice-chapter-title">章节练习</h3>
+                            <span class="progress-text" id="practice-progress-num">0/0</span>
+                        </div>
+                        <div class="progress-bar-bg small-bar">
+                            <div class="progress-bar-fill" id="practice-progress-fill" style="width: 0%"></div>
+                        </div>
+                        
+                        <!-- Question Type Filter -->
+                        <div class="filter-group">
+                            <label>过滤题型:</label>
+                            <select id="practice-type-filter" class="form-select">
+                                <option value="all">全部题型</option>
+                                <option value="single">单选题</option>
+                                <option value="multiple">多选题</option>
+                            </select>
+                        </div>
+
+                        <!-- Question Grid -->
+                        <div class="question-grid-container">
+                            <div class="question-grid" id="practice-grid">
+                                <!-- JS outputs e.g. <span class="grid-item">1</span> -->
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Main Question Card Area -->
+                    <div class="main-card-area">
+                        <div class="question-card glass" id="practice-question-card">
+                            <div class="card-header">
+                                <span class="tag-badge" id="practice-question-type">单选题</span>
+                                <button class="btn-icon" id="practice-fav-btn" title="加入错题本">
+                                    <i data-lucide="star"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="question-stem" id="practice-stem">
+                                题目加载中...
+                            </div>
+                            
+                            <div class="question-options" id="practice-options">
+                                <!-- JS outputs option elements -->
+                            </div>
+                            
+                            <div class="multiselect-actions hidden" id="practice-multi-actions">
+                                <button class="btn btn-primary" id="btn-submit-multiple">确认选择</button>
+                            </div>
+
+                            <!-- Feedback & Explanation Panel -->
+                            <div class="feedback-panel hidden" id="practice-feedback">
+                                <div class="feedback-status">
+                                    <i data-lucide="check-circle" class="icon-correct"></i>
+                                    <i data-lucide="x-circle" class="icon-incorrect"></i>
+                                    <span id="feedback-text">回答正确！</span>
+                                </div>
+                                <div class="explanation-content">
+                                    <p><strong>正确答案:</strong> <span class="highlight-ans" id="feedback-correct-answer">A</span></p>
+                                    <div class="explanation-detail hidden" id="explanation-detail-box">
+                                        <p><strong>解析:</strong></p>
+                                        <p id="feedback-explanation-text">无解析</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer">
+                                <button class="btn btn-secondary" id="btn-practice-prev"><i data-lucide="chevron-left"></i> 上一题</button>
+                                <button class="btn btn-secondary" id="btn-practice-next">下一题 <i data-lucide="chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mock Exam View -->
+            <section id="tab-exam" class="tab-content">
+                <!-- Exam Settings Panel -->
+                <div class="exam-setup-container glass" id="exam-setup">
+                    <h2><i data-lucide="award" class="large-icon"></i> 模拟考试设置</h2>
+                    <p class="description">组卷系统将从你选择的章节中随机抽取题目，模拟真实的限时考试。</p>
+                    
+                    <div class="setup-grid">
+                        <div class="form-group">
+                            <label>选择考试章节:</label>
+                            <div class="checkbox-group scroll-box" id="exam-chapters-checkboxes">
+                                <!-- Chapters populated by JS -->
+                            </div>
+                        </div>
+                        <div class="form-group-column">
+                            <div class="form-group">
+                                <label for="exam-question-count">抽取题目数量 (单选题+多选题):</label>
+                                <select id="exam-question-count" class="form-select">
+                                    <option value="20">20 题</option>
+                                    <option value="30" selected>30 题</option>
+                                    <option value="50">50 题</option>
+                                    <option value="100">100 题</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="exam-duration">考试限时 (分钟):</label>
+                                <select id="exam-duration" class="form-select">
+                                    <option value="15">15 分钟</option>
+                                    <option value="30" selected>30 分钟</option>
+                                    <option value="60">60 分钟</option>
+                                    <option value="120">120 分钟</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setup-actions">
+                        <button class="btn btn-primary btn-large" id="btn-start-exam">
+                            <i data-lucide="play-circle"></i> 开始模拟考
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Exam View -->
+                <div class="split-view hidden" id="exam-active">
+                    <!-- Exam Navigator Sidebar -->
+                    <aside class="side-panel glass">
+                        <div class="side-header">
+                            <h3>考试倒计时</h3>
+                            <div class="timer" id="exam-timer">00:00</div>
+                        </div>
+                        <div class="progress-bar-bg small-bar">
+                            <div class="progress-bar-fill timer-progress-bar" id="exam-time-progress" style="width: 100%"></div>
+                        </div>
+                        
+                        <div class="navigator-stats">
+                            <div>已答: <span id="exam-answered-count">0</span> / <span class="exam-total-count">0</span></div>
+                        </div>
+
+                        <!-- Question Grid -->
+                        <div class="question-grid-container">
+                            <div class="question-grid" id="exam-navigator-grid">
+                                <!-- populated by JS -->
+                            </div>
+                        </div>
+                        
+                        <div class="side-footer">
+                            <button class="btn btn-danger btn-block" id="btn-submit-exam">
+                                <i data-lucide="check-square"></i> 交卷并评分
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- Main Exam Question Area -->
+                    <div class="main-card-area">
+                        <div class="question-card glass" id="exam-question-card">
+                            <div class="card-header">
+                                <span class="tag-badge" id="exam-question-type">单选题</span>
+                                <span class="exam-index-text" id="exam-question-index">第 1 / 30 题</span>
+                            </div>
+                            
+                            <div class="question-stem" id="exam-stem">
+                                题目加载中...
+                            </div>
+                            
+                            <div class="question-options" id="exam-options">
+                                <!-- options rendered by JS -->
+                            </div>
+
+                            <div class="multiselect-actions hidden" id="exam-multi-actions">
+                                <button class="btn btn-primary" id="btn-exam-submit-multiple">确认选择</button>
+                            </div>
+                            
+                            <div class="card-footer">
+                                <button class="btn btn-secondary" id="btn-exam-prev"><i data-lucide="chevron-left"></i> 上一题</button>
+                                <button class="btn btn-secondary" id="btn-exam-next">下一题 <i data-lucide="chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exam Results View -->
+                <div class="exam-results-container glass hidden" id="exam-results">
+                    <h2><i data-lucide="check-circle" class="large-icon success-icon"></i> 考试结果报告</h2>
+                    
+                    <div class="results-summary">
+                        <div class="result-circle">
+                            <span class="score-number" id="result-score">0</span>
+                            <span class="score-label">最终得分</span>
+                        </div>
+                        <div class="results-stats">
+                            <div class="res-stat-item">
+                                <span class="label">答题正确率</span>
+                                <span class="value" id="result-accuracy">0%</span>
+                            </div>
+                            <div class="res-stat-item">
+                                <span class="label">答对题目数</span>
+                                <span class="value" id="result-correct-count">0 / 0</span>
+                            </div>
+                            <div class="res-stat-item">
+                                <span class="label">答题时间</span>
+                                <span class="value" id="result-time-spent">0秒</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="results-action-box">
+                        <p>考试中的错题已自动收入到“<strong>错题本</strong>”中，你可以前往错题本集中攻坚复习。</p>
+                        <div class="result-buttons">
+                            <button class="btn btn-primary" id="btn-restart-setup">
+                                <i data-lucide="rotate-ccw"></i> 重新模拟考
+                            </button>
+                            <button class="btn btn-secondary" id="btn-view-wrong-exams">
+                                <i data-lucide="help-circle"></i> 前往错题本
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Wrong Questions View -->
+            <section id="tab-wrong-collection" class="tab-content">
+                <div class="wrong-empty-state glass text-center" id="wrong-empty">
+                    <i data-lucide="smile" class="large-icon success-icon"></i>
+                    <h2>错题本是空的！</h2>
+                    <p class="description">太棒了！你目前没有任何错题记录。继续保持哦！</p>
+                </div>
+                
+                <div class="split-view hidden" id="wrong-active">
+                    <!-- Sidebar for Wrong Navigator -->
+                    <aside class="side-panel glass">
+                        <div class="side-header">
+                            <h3>错题库</h3>
+                            <span class="progress-text" id="wrong-progress-num">0/0</span>
+                        </div>
+                        <div class="progress-bar-bg small-bar">
+                            <div class="progress-bar-fill" id="wrong-progress-fill" style="width: 0%"></div>
+                        </div>
+                        
+                        <!-- Question Grid -->
+                        <div class="question-grid-container">
+                            <div class="question-grid" id="wrong-grid">
+                                <!-- populated by JS -->
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Main Wrong Card Area -->
+                    <div class="main-card-area">
+                        <div class="question-card glass" id="wrong-question-card">
+                            <div class="card-header">
+                                <span class="tag-badge" id="wrong-question-type">单选题</span>
+                                <button class="btn btn-danger btn-sm" id="btn-remove-wrong" title="移出错题本">
+                                    <i data-lucide="trash-2"></i> <span>移出本题</span>
+                                </button>
+                            </div>
+                            
+                            <div class="question-stem" id="wrong-stem">
+                                题目加载中...
+                            </div>
+                            
+                            <div class="question-options" id="wrong-options">
+                                <!-- options rendered by JS -->
+                            </div>
+
+                            <div class="multiselect-actions hidden" id="wrong-multi-actions">
+                                <button class="btn btn-primary" id="btn-wrong-submit-multiple">确认选择</button>
+                            </div>
+
+                            <!-- Feedback Panel -->
+                            <div class="feedback-panel hidden" id="wrong-feedback">
+                                <div class="feedback-status">
+                                    <i data-lucide="check-circle" class="icon-correct"></i>
+                                    <i data-lucide="x-circle" class="icon-incorrect"></i>
+                                    <span id="wrong-feedback-text">回答正确！</span>
+                                </div>
+                                <div class="explanation-content">
+                                    <p><strong>正确答案:</strong> <span class="highlight-ans" id="wrong-feedback-correct-answer">A</span></p>
+                                    <div class="explanation-detail hidden" id="wrong-explanation-detail-box">
+                                        <p><strong>解析:</strong></p>
+                                        <p id="wrong-feedback-explanation-text">无解析</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer">
+                                <button class="btn btn-secondary" id="btn-wrong-prev"><i data-lucide="chevron-left"></i> 上一题</button>
+                                <button class="btn btn-secondary" id="btn-wrong-next">下一题 <i data-lucide="chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Flashcard / Essay Memorization View -->
+            <section id="tab-flashcard" class="tab-content">
+                <div class="flashcard-setup glass" id="flashcard-setup">
+                    <h2><i data-lucide="layers" class="large-icon"></i> 主观题背诵助手</h2>
+                    <p class="description">包含简答题与论述题，通过虚拟闪卡（Flashcards）进行高效背诵和核心要点自查。</p>
+                    
+                    <div class="form-group">
+                        <label for="flashcard-chapter-select">选择背诵章节:</label>
+                        <select id="flashcard-chapter-select" class="form-select">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    
+                    <div class="setup-actions">
+                        <button class="btn btn-primary btn-large" id="btn-start-flashcard">
+                            <i data-lucide="play"></i> 开始背诵
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Flashcard View -->
+                <div class="flashcard-active hidden" id="flashcard-active-view">
+                    <div class="flashcard-controls">
+                        <button class="btn btn-secondary" id="btn-flashcard-back-setup">
+                            <i data-lucide="arrow-left"></i> 返回选择
+                        </button>
+                        <span class="progress-text" id="flashcard-progress-num">第 1 / 10 题</span>
+                    </div>
+
+                    <!-- Flashcard Flip Box Container -->
+                    <div class="flashcard-box-container">
+                        <div class="flashcard-box glass" id="flashcard-box">
+                            <!-- Front Side of card -->
+                            <div class="card-side card-front">
+                                <span class="flashcard-type-tag" id="flashcard-type">简答题</span>
+                                <div class="flashcard-question-text" id="flashcard-question">
+                                    这里是简答题题目内容？
+                                </div>
+                                <div class="flip-hint">
+                                    <i data-lucide="rotate-cw"></i> 点击卡片展示参考答案
+                                </div>
+                            </div>
+                            
+                            <!-- Back Side of card -->
+                            <div class="card-side card-back">
+                                <span class="flashcard-type-tag">参考答案要点</span>
+                                <div class="flashcard-answer-text" id="flashcard-answer">
+                                    这里是参考答案详情要点...
+                                </div>
+                                <div class="flip-hint">
+                                    <i data-lucide="rotate-cw"></i> 点击卡片返回题目
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mastery Actions -->
+                    <div class="mastery-actions">
+                        <button class="btn btn-danger btn-large" id="btn-flashcard-unmastered">
+                            <i data-lucide="x-circle"></i> 未掌握
+                        </button>
+                        <button class="btn btn-success btn-large" id="btn-flashcard-mastered">
+                            <i data-lucide="check-circle"></i> 已掌握
+                        </button>
+                    </div>
+                    
+                    <div class="flashcard-nav">
+                        <button class="btn btn-secondary" id="btn-flashcard-prev">上一卡</button>
+                        <button class="btn btn-secondary" id="btn-flashcard-next">下一卡</button>
+                    </div>
+                </div>
+            </section>
+            </main>
+            
+            <!-- Leaderboard Sidebar -->
+            <aside id="leaderboard-sidebar" class="glass leaderboard-sidebar">
+                <div class="leaderboard-header">
+                    <h3><i data-lucide="bar-chart-2"></i> 实时风云榜</h3>
+                    <button id="btn-refresh-lb" title="刷新榜单"><i data-lucide="refresh-cw"></i></button>
+                </div>
+                <div class="leaderboard-tabs">
+                    <button class="lb-tab active" data-lb="practice">练习榜</button>
+                    <button class="lb-tab" data-lb="exam_20">考20</button>
+                    <button class="lb-tab" data-lb="exam_50">考50</button>
+                    <button class="lb-tab" data-lb="exam_100">考100</button>
+                </div>
+                <div class="leaderboard-list-container">
+                    <ul class="leaderboard-list" id="leaderboard-list">
+                        <div class="lb-empty"><i data-lucide="loader"></i> 加载中...</div>
+                    </ul>
+                </div>
+            </aside>
+        </div> <!-- End of content-wrapper -->
+    </div>
+
+    <!-- Script Entry -->
+    <script src="app.js"></script>
+</body>
+</html>
